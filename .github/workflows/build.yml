@@ -3,21 +3,42 @@ on: [push]
 
 jobs:
   build:
-    name: Build for Android
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
+      - name: Set up Java
+        uses: actions/setup-java@v4
         with:
-          command: buildozer android debug
-          buildozer_version: stable
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK and Build-Tools
+        run: |
+          # 1. Скачиваем инструменты командной строки Android SDK
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          mkdir -p android-sdk
+          unzip commandlinetools-linux-9477386_latest.zip -d android-sdk
+          # 2. Настраиваем переменные окружения (для последующих шагов)
+          echo "ANDROID_SDK_ROOT=$PWD/android-sdk" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$PWD/android-sdk" >> $GITHUB_ENV
+          echo "$PWD/android-sdk/cmdline-tools/bin" >> $GITHUB_PATH
+
+      - name: Accept Licenses and Install Components
+        run: |
+          # 3. Автоматически принимаем все лицензии
+          yes | sdkmanager --licenses
+          # 4. Явно устанавливаем platform-tools и нужную версию build-tools (например, 34.0.0)
+          sdkmanager "platform-tools" "build-tools;34.0.0"
+
+      - name: Build with Buildozer
+        run: |
+          export P4A_BRANCH=release-2022.12.20
+          buildozer android debug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: ./bin/*.apk
