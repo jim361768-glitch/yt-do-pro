@@ -1,75 +1,83 @@
-name: Build APK
-on: [push]
+[app]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+# Название приложения и пакета
+title = YouTube Downloader Pro
+package.name = youtube.downloader.pro
+package.domain = com.youtube
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
+# Версия приложения
+version = 1.0
 
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            git zip unzip curl \
-            openjdk-11-jdk-headless \
-            python3-pip python3-venv \
-            autoconf libtool pkg-config \
-            zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \
-            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+# Исходный код
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,ttf
 
-      - name: Install Buildozer, Cython and dependencies
-        run: |
-          pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
-          pip3 install buildozer
+# Требования (критически важно для yt-dlp)
+requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi
+# Версия Python
+python.version = 3.9
 
-      - name: Manually Install Android SDK and Accept Licenses
-        run: |
-          # 1. Создаем директории и настраиваем переменные
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          export ANDROID_SDK_ROOT="$HOME/android-sdk"
-          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
-          
-          # 2. Скачиваем Command Line Tools
-          cd /tmp
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-          unzip -q commandlinetools-linux-11076708_latest.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
-          mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
-          rm commandlinetools-linux-11076708_latest.zip
-          
-          # 3. Добавляем sdkmanager в PATH
-          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
-          
-          # 4. Принимаем лицензии
-          yes | sdkmanager --licenses > /dev/null 2>&1 || echo "Licenses accepted"
-          
-          # 5. Устанавливаем КОНКРЕТНЫЕ компоненты (критически важно!)
-          sdkmanager "platform-tools" "platforms;android-33" "build-tools;34.0.0"
+# Настройки ориентации и отображения
+orientation = portrait
+fullscreen = 0
+wakelock = 1
 
-      - name: Build APK with Buildozer
-        run: |
-          # Устанавливаем критическую переменную для стабильности сборки
-          export P4A_BRANCH=release-2022.12.20
-          # Собираем APK
-          buildozer android debug
-        env:
-          ANDROID_SDK_ROOT: /home/runner/android-sdk
-          ANDROID_HOME: /home/runner/android-sdk
-          # Явно указываем путь к SDK для Buildozer
-          BUILDozER_ANDROID_SDK: /home/runner/android-sdk
+# ==============================================
+# КРИТИЧЕСКИ ВАЖНЫЕ НАСТРОЙКИ ДЛЯ АВТОМАТИЧЕСКОЙ СБОРКИ
+# ==============================================
 
-      - name: Upload APK Artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: youtube-downloader-apk
-          path: ./bin/*.apk
+# Автоматически принимать лицензии Android SDK (ОБЯЗАТЕЛЬНО для CI)
+android.accept_sdk_license = True
+
+# Явно указываем версию Build-Tools (34.0.0 стабильна, вместо проблемной 36.1)
+android.build_tools_version = 34.0.0
+
+# Используем стабильную ветку python-for-android (предотвращает множество ошибок)
+p4a.branch = release-2022.12.20
+
+# Версия Android API (должна соответствовать установленной в SDK)
+android.api = 33
+android.minapi = 21
+android.sdk = 33
+
+# Разрешения Android
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+
+# Архитектура (обе для максимальной совместимости)
+android.arch = arm64-v8a,armeabi-v7a
+
+# Настройки подписи (для отладки)
+android.keystore = debug.keystore
+android.keystore.password = android
+android.keyalias = androiddebugkey
+android.keyalias.password = android
+
+# Пути к иконке и splash screen (оставьте пустым, если файлов нет)
+icon.filename = 
+presplash.filename = 
+presplash.color = #FFFFFF
+
+# ==============================================
+# НАСТРОЙКИ BUILD PROCESS
+# ==============================================
+
+# Количество параллельных процессов для ускорения сборки
+build.num_processes = 4
+
+# Уровень логирования (2 = нормальный, 1 = минимальный)
+log_level = 2
+
+# Предотвращать предупреждения о работе от root
+warn_on_root = 1
+
+[buildozer]
+
+# Включить автоматическое принятие лицензий Android SDK
+android.accept_sdk_license = True
+
+# Таймауты для скачивания (важно для медленных соединений)
+android.sdk_download_timeout = 600
+android.ndk_download_timeout = 600
+
+# Уровень логирования Buildozer
+log_level = 2
