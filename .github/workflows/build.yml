@@ -29,17 +29,15 @@ jobs:
           pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
           pip3 install buildozer
 
-      # Ключевой исправленный шаг сборки
-      - name: Build APK with Buildozer (Accepts Licenses)
+      - name: Build APK with Buildozer
         run: |
           export P4A_BRANCH=release-2022.12.20
-          # Передаем флаг для автоматического принятия всех лицензий SDK
-          buildozer android debug -- --sdk_manager_extra_args="--licenses"
+          buildozer android debug
         env:
-          # Используем 'yes' для автоматического ответа 'y' на все запросы
-          ACCEPT_ALL_ANDROID_SDK_LICENSES: "yes"
           ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
           ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
+          # Дополнительная переменная для гарантии принятия лицензий
+          ACCEPT_ALL_ANDROID_SDK_LICENSES: "yes"
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
