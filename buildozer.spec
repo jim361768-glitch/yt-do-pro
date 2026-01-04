@@ -3,6 +3,7 @@ title = YouTube Downloader Pro
 package.name = youtube.downloader.pro
 package.domain = com.youtube
 version = 1.0
+android.build_tools_version = 34.0.0
 requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi
 python.version = 3.9
 source.dir = .
@@ -32,4 +33,5 @@ p4a.branch = release-2022.12.20
 [buildozer]
 log_level = 2
 warn_on_root = 1
+
 android.accept_sdk_license = true
