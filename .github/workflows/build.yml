@@ -14,19 +14,16 @@ jobs:
 
       - name: Install missing dependencies in container
         run: |
-          # Устанавливаем недостающие пакеты внутри контейнера
           apt-get update
           apt-get install -y python3-pip zip unzip git
           pip3 install --upgrade Cython==0.29.33
 
-      - name: Build APK in Docker
+      - name: Build APK in Docker (Auto-accept root warning)
         run: |
-          # В контейнере kivy/buildozer рабочая директория /home/user
           cd /home/user/hostcwd
-          ls -la
           export P4A_BRANCH=release-2022.12.20
-          echo "Starting buildozer..."
-          buildozer android debug
+          # Автоматически отвечаем 'y' на предупреждение о работе от root
+          echo "y" | buildozer android debug
 
       - name: Upload APK Artifact
         if: success()
