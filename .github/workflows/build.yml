@@ -3,96 +3,22 @@ on: [push]
 
 jobs:
   build:
+    # Используем готовый Docker-образ с Buildozer и Android SDK
     runs-on: ubuntu-latest
+    container:
+      image: kivy/buildozer:latest
+      options: --privileged
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.9
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
-
-      - name: Install System Dependencies
+      - name: Build APK in Docker
+        # Внутри контейнера выполняем сборку
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y \
-            git zip unzip \
-            openjdk-11-jdk-headless \
-            python3-pip python3-venv \
-            autoconf libtool pkg-config \
-            zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \
-            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
-
-      - name: Install Buildozer and Cython
-        run: |
-          pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
-          pip3 install buildozer
-
-      - name: Initialize Android Environment
-        run: |
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          export ANDROID_SDK_ROOT="/home/runner/.buildozer/android/platform/android-sdk"
-          export ANDROID_HOME="$ANDROID_SDK_ROOT"
-          echo "Android environment initialized"
-        env:
-          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-
-      # Новый шаг: Предварительная инициализация Buildozer (скачивание SDK)
-      - name: Pre-initialize Buildozer SDK
-        run: |
+          cd /github/workspace
           export P4A_BRANCH=release-2022.12.20
-          # Устанавливаем режим автоматического принятия лицензий для этой команды
-          export ACCEPT_ALL_ANDROID_SDK_LICENSES=yes
-          # Запускаем команду, которая инициирует скачивание SDK
-          buildozer android clean 2>&1 | tail -30
-          echo "SDK pre-initialization completed"
-        env:
-          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-
-      - name: Accept SDK Licenses (Fixed Method)
-        run: |
-          export SDK_ROOT="/home/runner/.buildozer/android/platform/android-sdk"
-          echo "SDK location: $SDK_ROOT"
-          
-          # Ждем и проверяем наличие SDK
-          timeout 60 bash -c "until find $SDK_ROOT -name 'sdkmanager' | grep -q .; do sleep 2; echo 'Waiting for sdkmanager...'; done"
-          
-          # Ищем путь к sdkmanager
-          SDKMANAGER_PATH=$(find "$SDK_ROOT" -name "sdkmanager" -type f | head -1)
-          
-          if [ -z "$SDKMANAGER_PATH" ]; then
-            echo "ERROR: sdkmanager not found!"
-            find "$SDK_ROOT" -type f | head -20
-            exit 1
-          fi
-          
-          echo "Found sdkmanager at: $SDKMANAGER_PATH"
-          
-          # Принимаем лицензии, передавая все ответы 'y' за один раз
-          echo -e "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n" | "$SDKMANAGER_PATH" --licenses
-          
-          # Устанавливаем конкретную версию build-tools
-          echo "Installing build-tools 34.0.0..."
-          "$SDKMANAGER_PATH" "build-tools;34.0.0" "platform-tools" "platforms;android-33"
-          
-          echo "SDK setup completed successfully"
-        env:
-          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-
-      - name: Build APK with Buildozer
-        run: |
-          export P4A_BRANCH=release-2022.12.20
-          echo "Starting final APK build..."
           buildozer android debug
-        env:
-          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-          ACCEPT_ALL_ANDROID_SDK_LICENSES: "yes"
 
       - name: Upload APK Artifact
         if: success()
