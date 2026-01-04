@@ -1,0 +1,21 @@
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: pip install --upgrade Cython==0.29.33
+      - uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android debug
+          buildozer_version: stable
+        env:
+          P4A_BRANCH: release-2022.12.20
+      - uses: actions/upload-artifact@v4
+        with:
+          name: youtube-downloader-apk
+          path: ./*.apk
