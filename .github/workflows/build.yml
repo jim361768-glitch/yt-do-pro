@@ -1,43 +1,49 @@
 name: Build APK
-on: [push]
+on: [push] # Запускать сборку при каждом push в репозиторий
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # Среда выполнения - последний Ubuntu (24.04)
     steps:
+      # 1. Клонируем код репозитория
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Устанавливаем Python 3.9 (стабильная версия для Buildozer)
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
-      - name: Install System Dependencies for Ubuntu 24.04
+      # 3. УСТАНОВКА СИСТЕМНЫХ ЗАВИСИМОСТЕЙ (Ключевой исправленный шаг)
+      - name: Install System Dependencies
         run: |
           sudo apt-get update -y
           sudo apt-get install -y \
-          git zip unzip \
-          openjdk-17-jdk \
-          python3-pip python3-venv \
-          autoconf libtool pkg-config \
-          zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \ # `libtinfo5` заменён на `libncurses-dev`
-          libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+            git zip unzip \
+            openjdk-17-jdk \
+            python3-pip python3-venv \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
+      # 4. Устанавливаем Buildozer и Cython
       - name: Install Buildozer and Cython
         run: |
           pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
           pip3 install buildozer
 
-      - name: Build APK with Buildozer (THIS WILL TAKE 30-60 MIN)
+      # 5. Сборка APK. Первый раз может занять 30-60 минут.
+      - name: Build APK with Buildozer
         run: |
           export P4A_BRANCH=release-2022.12.20
           buildozer android debug
         env:
-          # Критически важно для работы с Android SDK в среде CI
+          # Важные переменные для корректной работы в CI
           ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
           ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
 
+      # 6. Если сборка успешна, загружаем APK как артефакт
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
