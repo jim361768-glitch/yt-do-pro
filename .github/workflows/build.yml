@@ -5,14 +5,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # 1. Клонируем код проекта
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2. Устанавливаем Python 3.9
       - name: Set up Python 3.9
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
+      # 3. Устанавливаем системные зависимости для Ubuntu 24.04
       - name: Install System Dependencies
         run: |
           sudo apt-get update -y
@@ -24,21 +27,58 @@ jobs:
             zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \
             libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
+      # 4. Устанавливаем Buildozer и Cython
       - name: Install Buildozer and Cython
         run: |
           pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
           pip3 install buildozer
 
+      # 5. Устанавливаем Java 11 для работы sdkmanager
+      - name: Setup Java for Android SDK
+        run: |
+          sudo apt-get install -y openjdk-11-jdk
+          sudo update-java-alternatives --set java-1.11.0-openjdk-amd64 || echo "Java version set"
+
+      # 6. КРИТИЧЕСКИ ВАЖНЫЙ ШАГ: Принимаем лицензии Android SDK
+      - name: Accept Android SDK Licenses
+        run: |
+          # Принудительно создаем структуру каталогов SDK
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          
+          # Указываем путь к SDK
+          export SDK_ROOT="/home/runner/.buildozer/android/platform/android-sdk"
+          
+          # Даем Buildozer скачать минимальный SDK
+          echo "Initializing SDK download..."
+          buildozer android sdk-download || true
+          
+          # Ждем немного, чтобы файлы создались
+          sleep 10
+          
+          # Принимаем ВСЕ лицензии автоматически
+          echo "Accepting all SDK licenses..."
+          yes | $SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_ROOT --licenses --verbose
+          
+          # Устанавливаем конкретную версию build-tools (34.0.0 вместо 36.1)
+          echo "Installing build-tools 34.0.0..."
+          $SDK_ROOT/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_ROOT "build-tools;34.0.0"
+        env:
+          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
+          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
+
+      # 7. Запускаем сборку APK
       - name: Build APK with Buildozer
         run: |
           export P4A_BRANCH=release-2022.12.20
+          echo "Starting APK build..."
           buildozer android debug
         env:
           ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
           ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-          # Дополнительная переменная для гарантии принятия лицензий
           ACCEPT_ALL_ANDROID_SDK_LICENSES: "yes"
 
+      # 8. Если сборка успешна, загружаем APK
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
