@@ -13,7 +13,7 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Install System Dependencies
+      - name: Install System Dependencies for Ubuntu 24.04
         run: |
           sudo apt-get update -y
           sudo apt-get install -y \
@@ -21,10 +21,8 @@ jobs:
           openjdk-17-jdk \
           python3-pip python3-venv \
           autoconf libtool pkg-config \
-          zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 \
-          cmake libffi-dev libssl-dev \
-          libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev \
-          ffmpeg  # Установим ffmpeg в систему, он может пригодиться
+          zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \ # `libtinfo5` заменён на `libncurses-dev`
+          libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
       - name: Install Buildozer and Cython
         run: |
