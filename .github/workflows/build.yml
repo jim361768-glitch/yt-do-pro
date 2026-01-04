@@ -29,25 +29,15 @@ jobs:
           pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
           pip3 install buildozer
 
-      # Ключевой новый шаг: принятие лицензий Android SDK
-      - name: Accept Android SDK Licenses
-        run: |
-          # Создаём рабочую директорию Android SDK, если её нет
-          mkdir -p ~/.android
-          touch ~/.android/repositories.cfg
-          # Используем yes для автоматического ответа 'y' на все запросы лицензий
-          yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses || true
-        env:
-          ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
-          # Следующие две строки нужны, если предыдущая команда не сработает
-          ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
-          PATH: $PATH:/home/runner/.buildozer/android/platform/android-sdk/tools/bin
-
-      - name: Build APK with Buildozer
+      # Ключевой исправленный шаг сборки
+      - name: Build APK with Buildozer (Accepts Licenses)
         run: |
           export P4A_BRANCH=release-2022.12.20
-          buildozer android debug
+          # Передаем флаг для автоматического принятия всех лицензий SDK
+          buildozer android debug -- --sdk_manager_extra_args="--licenses"
         env:
+          # Используем 'yes' для автоматического ответа 'y' на все запросы
+          ACCEPT_ALL_ANDROID_SDK_LICENSES: "yes"
           ANDROID_SDK_ROOT: /home/runner/.buildozer/android/platform/android-sdk
           ANDROID_HOME: /home/runner/.buildozer/android/platform/android-sdk
 
