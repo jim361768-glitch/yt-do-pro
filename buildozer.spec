@@ -1,37 +1,83 @@
 [app]
+
+# Название приложения и пакета
 title = YouTube Downloader Pro
 package.name = youtube.downloader.pro
 package.domain = com.youtube
+
+# Версия приложения
 version = 1.0
-android.build_tools_version = 34.0.0
-requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi
-python.version = 3.9
+
+# Исходный код
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,ttf
+
+# Требования (критически важно для yt-dlp)
+requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi
+# Версия Python
+python.version = 3.9
+
+# Настройки ориентации и отображения
 orientation = portrait
 fullscreen = 0
 wakelock = 1
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+
+# ==============================================
+# КРИТИЧЕСКИ ВАЖНЫЕ НАСТРОЙКИ ДЛЯ АВТОМАТИЧЕСКОЙ СБОРКИ
+# ==============================================
+
+# Автоматически принимать лицензии Android SDK (ОБЯЗАТЕЛЬНО для CI)
+android.accept_sdk_license = True
+
+# Явно указываем версию Build-Tools (34.0.0 стабильна, вместо проблемной 36.1)
+android.build_tools_version = 34.0.0
+
+# Используем стабильную ветку python-for-android (предотвращает множество ошибок)
+p4a.branch = release-2022.12.20
+
+# Версия Android API (должна соответствовать установленной в SDK)
 android.api = 33
 android.minapi = 21
 android.sdk = 33
-android.ndk = 23b
-android.ndk_api = 21
-android.arch = arm64-v8a
-icon.filename =
-presplash.filename =
-presplash.color = #FFFFFF
+
+# Разрешения Android
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+
+# Архитектура (обе для максимальной совместимости)
+android.arch = arm64-v8a,armeabi-v7a
+
+# Настройки подписи (для отладки)
 android.keystore = debug.keystore
 android.keystore.password = android
 android.keyalias = androiddebugkey
 android.keyalias.password = android
-android.allow_backup = true
-android.sdk_download_timeout = 300
-android.ndk_download_timeout = 300
-p4a.branch = release-2022.12.20
 
-[buildozer]
+# Пути к иконке и splash screen (оставьте пустым, если файлов нет)
+icon.filename = 
+presplash.filename = 
+presplash.color = #FFFFFF
+
+# ==============================================
+# НАСТРОЙКИ BUILD PROCESS
+# ==============================================
+
+# Количество параллельных процессов для ускорения сборки
+build.num_processes = 4
+
+# Уровень логирования (2 = нормальный, 1 = минимальный)
 log_level = 2
+
+# Предотвращать предупреждения о работе от root
 warn_on_root = 1
 
-android.accept_sdk_license = true
+[buildozer]
+
+# Включить автоматическое принятие лицензий Android SDK
+android.accept_sdk_license = True
+
+# Таймауты для скачивания (важно для медленных соединений)
+android.sdk_download_timeout = 600
+android.ndk_download_timeout = 600
+
+# Уровень логирования Buildozer
+log_level = 2
