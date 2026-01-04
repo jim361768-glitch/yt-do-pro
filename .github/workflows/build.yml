@@ -6,28 +6,36 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: kivy/buildozer:latest
-      options: --privileged
+      # Ключевое изменение: монтируем текущую директорию в контейнер
+      options: --privileged -v ${{ github.workspace }}:/home/user/hostcwd
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install missing dependencies in container
+      - name: List files (debug)
+        run: |
+          echo "Files in the repository:"
+          ls -la
+
+      - name: Install dependencies in container
         run: |
           apt-get update
           apt-get install -y python3-pip zip unzip git
           pip3 install --upgrade Cython==0.29.33
 
-      - name: Build APK in Docker (Auto-accept root warning)
+      - name: Build APK in Docker
         run: |
           cd /home/user/hostcwd
+          echo "Files in container's /home/user/hostcwd:"
+          ls -la
           export P4A_BRANCH=release-2022.12.20
-          # Автоматически отвечаем 'y' на предупреждение о работе от root
-          echo "y" | buildozer android debug
+          # Пропускаем предупреждение о root через yes
+          yes | buildozer android debug
 
       - name: Upload APK Artifact
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
-          path: /home/user/hostcwd/bin/*.apk
+          path: ./bin/*.apk  # Путь относительно корня репозитория
