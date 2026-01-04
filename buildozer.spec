@@ -1,0 +1,35 @@
+[app]
+title = YouTube Downloader Pro
+package.name = youtube.downloader.pro
+package.domain = com.youtube
+version = 1.0
+requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi
+python.version = 3.9
+source.dir = .
+source.include_exts = py,png,jpg,kv,atlas,ttf
+orientation = portrait
+fullscreen = 0
+wakelock = 1
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
+android.api = 33
+android.minapi = 21
+android.sdk = 33
+android.ndk = 23b
+android.ndk_api = 21
+android.arch = arm64-v8a
+icon.filename =
+presplash.filename =
+presplash.color = #FFFFFF
+android.keystore = debug.keystore
+android.keystore.password = android
+android.keyalias = androiddebugkey
+android.keyalias.password = android
+android.allow_backup = true
+android.sdk_download_timeout = 300
+android.ndk_download_timeout = 300
+p4a.branch = release-2022.12.20
+
+[buildozer]
+log_level = 2
+warn_on_root = 1
+android.accept_sdk_license = true
