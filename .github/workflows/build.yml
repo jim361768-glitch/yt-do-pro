@@ -8,36 +8,67 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v5
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          python-version: '3.9'
 
-      - name: Setup Android SDK and Build-Tools
+      - name: Install System Dependencies
         run: |
-          # 1. Скачиваем инструменты командной строки Android SDK
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          mkdir -p android-sdk
-          unzip commandlinetools-linux-9477386_latest.zip -d android-sdk
-          # 2. Настраиваем переменные окружения (для последующих шагов)
-          echo "ANDROID_SDK_ROOT=$PWD/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_HOME=$PWD/android-sdk" >> $GITHUB_ENV
-          echo "$PWD/android-sdk/cmdline-tools/bin" >> $GITHUB_PATH
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            git zip unzip curl \
+            openjdk-11-jdk-headless \
+            python3-pip python3-venv \
+            autoconf libtool pkg-config \
+            zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev \
+            libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
 
-      - name: Accept Licenses and Install Components
+      - name: Install Buildozer, Cython and dependencies
         run: |
-          # 3. Автоматически принимаем все лицензии
-          yes | sdkmanager --licenses
-          # 4. Явно устанавливаем platform-tools и нужную версию build-tools (например, 34.0.0)
-          sdkmanager "platform-tools" "build-tools;34.0.0"
+          pip3 install --upgrade Cython==0.29.33 virtualenv setuptools wheel
+          pip3 install buildozer
 
-      - name: Build with Buildozer
+      - name: Manually Install Android SDK and Accept Licenses
         run: |
+          # 1. Создаем директории и настраиваем переменные
+          mkdir -p ~/.android
+          touch ~/.android/repositories.cfg
+          export ANDROID_SDK_ROOT="$HOME/android-sdk"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+          
+          # 2. Скачиваем Command Line Tools
+          cd /tmp
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          unzip -q commandlinetools-linux-11076708_latest.zip -d "$ANDROID_SDK_ROOT/cmdline-tools"
+          mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          rm commandlinetools-linux-11076708_latest.zip
+          
+          # 3. Добавляем sdkmanager в PATH
+          echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_SDK_ROOT/platform-tools" >> $GITHUB_PATH
+          
+          # 4. Принимаем лицензии
+          yes | sdkmanager --licenses > /dev/null 2>&1 || echo "Licenses accepted"
+          
+          # 5. Устанавливаем КОНКРЕТНЫЕ компоненты (критически важно!)
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;34.0.0"
+
+      - name: Build APK with Buildozer
+        run: |
+          # Устанавливаем критическую переменную для стабильности сборки
           export P4A_BRANCH=release-2022.12.20
+          # Собираем APK
           buildozer android debug
+        env:
+          ANDROID_SDK_ROOT: /home/runner/android-sdk
+          ANDROID_HOME: /home/runner/android-sdk
+          # Явно указываем путь к SDK для Buildozer
+          BUILDozER_ANDROID_SDK: /home/runner/android-sdk
 
       - name: Upload APK Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
