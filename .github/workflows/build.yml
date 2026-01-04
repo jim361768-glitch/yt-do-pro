@@ -1,21 +1,35 @@
 name: Build APK
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-      - run: pip install --upgrade Cython==0.29.33
-      - uses: ArtemSBulgakov/buildozer-action@v1
+
+      - name: Install Buildozer and dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libffi-dev libssl-dev
+          pip3 install --upgrade Cython==0.29.33 buildozer
+
+      - name: Build with Buildozer
+        uses: ViggoNordholm/buildozer-action@v1
         with:
-          command: buildozer android debug
+          workdir: .
           buildozer_version: stable
+          command: buildozer android debug
         env:
           P4A_BRANCH: release-2022.12.20
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
-          path: ./*.apk
+          path: ./bin/*.apk
