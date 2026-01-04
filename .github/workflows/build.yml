@@ -3,7 +3,6 @@ on: [push]
 
 jobs:
   build:
-    # Используем готовый Docker-образ с Buildozer и Android SDK
     runs-on: ubuntu-latest
     container:
       image: kivy/buildozer:latest
@@ -13,11 +12,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build APK in Docker
-        # Внутри контейнера выполняем сборку
+      - name: Install missing dependencies in container
         run: |
-          cd /github/workspace
+          # Устанавливаем недостающие пакеты внутри контейнера
+          apt-get update
+          apt-get install -y python3-pip zip unzip git
+          pip3 install --upgrade Cython==0.29.33
+
+      - name: Build APK in Docker
+        run: |
+          # В контейнере kivy/buildozer рабочая директория /home/user
+          cd /home/user/hostcwd
+          ls -la
           export P4A_BRANCH=release-2022.12.20
+          echo "Starting buildozer..."
           buildozer android debug
 
       - name: Upload APK Artifact
@@ -25,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
-          path: ./bin/*.apk
+          path: /home/user/hostcwd/bin/*.apk
