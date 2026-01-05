@@ -1,83 +1,35 @@
 [app]
-
-# Название приложения и пакета
 title = YouTube Downloader Pro
 package.name = youtube.downloader.pro
 package.domain = com.youtube
-
-# Версия приложения
 version = 1.0
-
-# Исходный код
+requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi,ffmpeg
+python.version = 3.9
 source.dir = .
 source.include_exts = py,png,jpg,kv,atlas,ttf
-
-# Требования (критически важно для yt-dlp)
-requirements = python3,kivy,pyjnius,android,yt-dlp,requests,urllib3,certifi,charset-normalizer,idna,pycryptodome,websockets,brotli,brotlicffi
-# Версия Python
-python.version = 3.9
-
-# Настройки ориентации и отображения
 orientation = portrait
 fullscreen = 0
 wakelock = 1
-
-# ==============================================
-# КРИТИЧЕСКИ ВАЖНЫЕ НАСТРОЙКИ ДЛЯ АВТОМАТИЧЕСКОЙ СБОРКИ
-# ==============================================
-
-# Автоматически принимать лицензии Android SDK (ОБЯЗАТЕЛЬНО для CI)
-android.accept_sdk_license = True
-
-# Явно указываем версию Build-Tools (34.0.0 стабильна, вместо проблемной 36.1)
-android.build_tools_version = 34.0.0
-
-# Используем стабильную ветку python-for-android (предотвращает множество ошибок)
-p4a.branch = release-2022.12.20
-
-# Версия Android API (должна соответствовать установленной в SDK)
+android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 android.api = 33
 android.minapi = 21
 android.sdk = 33
-
-# Разрешения Android
-android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-
-# Архитектура (обе для максимальной совместимости)
-android.arch = arm64-v8a,armeabi-v7a
-
-# Настройки подписи (для отладки)
+android.ndk = 23b
+android.ndk_api = 21
+android.arch = arm64-v8a
+icon.filename = icon.png
+presplash.filename = presplash.jpg
+presplash.color = #FFFFFF
 android.keystore = debug.keystore
 android.keystore.password = android
 android.keyalias = androiddebugkey
 android.keyalias.password = android
-
-# Пути к иконке и splash screen (оставьте пустым, если файлов нет)
-icon.filename = 
-presplash.filename = 
-presplash.color = #FFFFFF
-
-# ==============================================
-# НАСТРОЙКИ BUILD PROCESS
-# ==============================================
-
-# Количество параллельных процессов для ускорения сборки
-build.num_processes = 4
-
-# Уровень логирования (2 = нормальный, 1 = минимальный)
-log_level = 2
-
-# Предотвращать предупреждения о работе от root
-warn_on_root = 1
-
-[buildozer]
-
-# Включить автоматическое принятие лицензий Android SDK
-android.accept_sdk_license = True
-
-# Таймауты для скачивания (важно для медленных соединений)
+android.allow_backup = true
 android.sdk_download_timeout = 600
 android.ndk_download_timeout = 600
+p4a.branch = stable
 
-# Уровень логирования Buildozer
+[buildozer]
 log_level = 2
+warn_on_root = 1
+android.accept_sdk_license = true
