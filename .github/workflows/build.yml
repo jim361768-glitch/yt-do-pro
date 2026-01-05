@@ -3,7 +3,7 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-22.04    # ← Это ключевое изменение!
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,7 +16,8 @@ jobs:
       - name: Build APK with Buildozer
         uses: digreatbrian/buildozer-action@v2
         with:
-          buildozer-cmd: buildozer -v android debug
+          buildozer-cmd: yes | buildozer -v android debug
+          # Если нужно больше verbose: buildozer-cmd: yes | buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
