@@ -1,33 +1,21 @@
 name: Build APK
 on: [push]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-    # Ключевое изменение: используем стабильный образ с предустановленным SDK
-    container:
-      image: kivy/buildozer:latest
-      options: --privileged
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install missing Python dependencies
-        run: |
-          apt-get update
-          # Устанавливаем недостающие пакеты, которые могут понадобиться для сборки
-          apt-get install -y python3-pip
-          pip3 install --upgrade Cython==0.29.33
-          pip3 install yt-dlp  # Явно устанавливаем yt-dlp и его зависимости
-
-      - name: Build APK in Docker
-        # Обходим предупреждение о root, автоматически отвечая 'y'
-        run: |
-          echo "y" | buildozer android debug
-
-      - name: Upload APK Artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+      - run: pip install --upgrade pip wheel setuptools
+      - uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android debug
+          buildozer_version: stable
+        env:
+          P4A_BRANCH: stable
+      - uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
-          path: ./bin/*.apk
+          path: bin/*.apk
