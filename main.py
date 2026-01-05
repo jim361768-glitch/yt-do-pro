@@ -1,7 +1,6 @@
 import os
 import threading
 import yt_dlp
-import subprocess
 from pathlib import Path
 
 from kivy.app import App
@@ -39,7 +38,7 @@ class DownloaderRoot(BoxLayout):
         row.add_widget(self.btn_fetch)
         self.add_widget(row)
 
-        self.info_label = Label(text=f"Без FFmpeg (только готовые форматы)\nПапка: {self.save_path}", font_size='12sp', halign='center')
+        self.info_label = Label(text=f"Папка: {self.save_path}", font_size='12sp', halign='center')
         self.add_widget(self.info_label)
 
         self.quality_spinner = Spinner(text='Выберите качество', values=(), size_hint_y=None, height=100, disabled=True)
@@ -73,11 +72,12 @@ class DownloaderRoot(BoxLayout):
         except: pass
 
     def paste_url(self, instance):
-        self.url_input.text = Clipboard.paste()
+        self.url_input.text = Clipboard.paste().strip()
 
     def start_fetch(self, instance):
         url = self.url_input.text.strip()
-        if not url: return
+        if not url:
+            return
         self.status_label.text = "🔍 Поиск форматов..."
         self.btn_fetch.disabled = True
         threading.Thread(target=self.fetch_thread, args=(url,), daemon=True).start()
@@ -87,25 +87,29 @@ class DownloaderRoot(BoxLayout):
             with yt_dlp.YoutubeDL({'quiet': True, 'logger': MyLogger()}) as ydl:
                 info = ydl.extract_info(url, download=False)
                 formats = info.get('formats', [])
-                valid = {"🎵 Только аудио (MP3)": "audio_only"}
+                valid = {"🎵 Только аудио (MP3)": "audio_only", "Best": "bestvideo+bestaudio/best"}
                 
                 seen_res = set()
                 for f in reversed(formats):
-                    if f.get('vcodec') == 'none': continue
-                    res = f.get('height')
-                    if not res: continue
-                    
-                    # Берем только форматы с аудио (без FFmpeg)
-                    has_audio = f.get('acodec') != 'none'
-                    if not has_audio:
+                    if f.get('vcodec') == 'none':
                         continue
-                        
+                    res = f.get('height')
+                    if not res:
+                        continue
+                    
                     label = f"{res}p"
-                    if label not in seen_res:
-                        valid[label] = f['format_id']
-                        seen_res.add(label)
+                    if label in seen_res:
+                        continue
+                    
+                    fmt_id = f['format_id']
+                    if f.get('acodec') == 'none':
+                        fmt_id += '+bestaudio/best'
+                    
+                    valid[label] = fmt_id
+                    seen_res.add(label)
 
-                Clock.schedule_once(lambda dt: self.update_after_fetch(info.get('title'), valid))
+                title = info.get('title', 'Unknown Title')
+                Clock.schedule_once(lambda dt: self.update_after_fetch(title, valid))
         except Exception as e:
             err_msg = str(e)
             Clock.schedule_once(lambda dt: self.show_error(err_msg))
@@ -113,7 +117,7 @@ class DownloaderRoot(BoxLayout):
     def update_after_fetch(self, title, formats):
         self.info_label.text = f"🎬 {title[:50]}..."
         self.formats_map = formats
-        keys = list(formats.keys())
+        keys = sorted(formats.keys())
         if keys:
             self.quality_spinner.values = keys
             self.quality_spinner.text = keys[0]
@@ -123,7 +127,7 @@ class DownloaderRoot(BoxLayout):
         self.status_label.text = "✅ Готов к загрузке"
 
     def show_error(self, msg):
-        self.status_label.text = f"❌ Ошибка"
+        self.status_label.text = "❌ Ошибка"
         self.info_label.text = msg[:100]
         self.btn_fetch.disabled = False
         self.btn_download.disabled = False
@@ -131,16 +135,19 @@ class DownloaderRoot(BoxLayout):
     def start_download(self, instance):
         url = self.url_input.text.strip()
         fmt_val = self.formats_map.get(self.quality_spinner.text)
-        if not fmt_val: return
+        if not fmt_val:
+            return
         self.btn_download.disabled = True
         threading.Thread(target=self.download_thread, args=(url, fmt_val), daemon=True).start()
 
     def download_thread(self, url, fmt_val):
         def hook(d):
             if d['status'] == 'downloading':
-                p = d.get('_percent_str', '0%').replace('%','').strip()
-                try: Clock.schedule_once(lambda dt: self.update_progress(float(p)))
-                except: pass
+                p = d.get('_percent_str', '0%').replace('%', '').strip()
+                try:
+                    Clock.schedule_once(lambda dt: self.update_progress(float(p)))
+                except:
+                    pass
             elif d['status'] == 'finished':
                 Clock.schedule_once(lambda dt: self.set_status("⚙️ Финализация..."))
 
@@ -154,7 +161,11 @@ class DownloaderRoot(BoxLayout):
 
         if fmt_val == "audio_only":
             opts['format'] = 'bestaudio/best'
-            # Без FFmpeg - скачиваем аудио в оригинальном формате
+            opts['postprocessors'] = [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }]
         else:
             opts['format'] = fmt_val
 
@@ -180,7 +191,8 @@ class DownloaderRoot(BoxLayout):
         self.btn_download.disabled = False
 
 class YTApp(App):
-    def build(self): return DownloaderRoot()
+    def build(self):
+        return DownloaderRoot()
 
 if __name__ == '__main__':
     YTApp().run()
