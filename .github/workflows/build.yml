@@ -16,8 +16,8 @@ jobs:
       - name: Build APK with Buildozer
         uses: digreatbrian/buildozer-action@v2
         with:
+          python-version: '3.9'  # optional, but good to specify
           buildozer-cmd: yes | buildozer -v android debug
-          # Если нужно больше verbose: buildozer-cmd: yes | buildozer -v android debug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
