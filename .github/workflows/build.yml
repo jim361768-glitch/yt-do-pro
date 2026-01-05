@@ -8,11 +8,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build APK with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          command: buildozer -v android debug
-          buildozer_version: stable
+          python-version: '3.9'
+
+      - name: Build APK with Buildozer
+        uses: digreatbrian/buildozer-action@v2
+        with:
+          buildozer-cmd: buildozer -v android debug
+          # Если buildozer.spec не в корне, укажи: work-dir: src
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
