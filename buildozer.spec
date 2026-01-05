@@ -33,4 +33,6 @@ p4a.branch = develop
 log_level = 2
 warn_on_root = 1
 android.accept_sdk_license = true
+android.sdkmanager_cmd = --licenses --sdk_root=%(android_sdk_dir)s
+
 
