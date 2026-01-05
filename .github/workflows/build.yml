@@ -1,21 +1,22 @@
 name: Build APK
 on: [push]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build APK with Buildozer
+        uses: digreatbrian/buildozer-action@v2
         with:
           python-version: '3.9'
-      - run: pip install --upgrade pip wheel setuptools
-      - uses: ArtemSBulgakov/buildozer-action@v1
-        with:
-          command: buildozer android debug
-          buildozer_version: stable
-        env:
-          P4A_BRANCH: stable
-      - uses: actions/upload-artifact@v4
+          buildozer-cmd: buildozer -v android debug
+          # work-dir: .  # Если buildozer.spec не в корне, укажи путь, например: src
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
           name: youtube-downloader-apk
           path: bin/*.apk
