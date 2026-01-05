@@ -27,9 +27,10 @@ android.keyalias.password = android
 android.allow_backup = true
 android.sdk_download_timeout = 600
 android.ndk_download_timeout = 600
-p4a.branch = stable
+p4a.branch = develop
 
 [buildozer]
 log_level = 2
 warn_on_root = 1
 android.accept_sdk_license = true
+
