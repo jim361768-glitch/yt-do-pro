@@ -14,14 +14,26 @@ jobs:
           python-version: '3.9'
 
       - name: Clean old Buildozer cache
-        run: rm -rf .buildozer
+        run: rm -rf .buildozer ~/.buildozer
 
-      - name: Accept Android SDK licenses manually
+      - name: Accept Android SDK licenses manually (fixes build-tools/aidl)
         run: |
           mkdir -p $HOME/.buildozer/android/platform/android-sdk/licenses
           echo "8933bad161af4178b1185d1a37fbf41ea5269c55" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-license
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-preview-license
           echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $HOME/.buildozer/android/platform/android-sdk/licenses/android-sdk-arm-dbt-license
+
+      - name: Pre-install platform-tools (fixes sdkmanager and aidl)
+        run: |
+          # Ждём, пока Buildozer скачает cmdline-tools (после NDK)
+          # Но вручную запускаем sdkmanager для platform-tools
+          sleep 60  # Даём время на скачивание базового SDK
+          SDK_PATH=$HOME/.buildozer/android/platform/android-sdk
+          if [ -d "$SDK_PATH/cmdline-tools/latest/bin" ]; then
+            $SDK_PATH/cmdline-tools/latest/bin/sdkmanager --sdk_root=$SDK_PATH "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          elif [ -d "$SDK_PATH/tools/bin" ]; then
+            $SDK_PATH/tools/bin/sdkmanager --sdk_root=$SDK_PATH "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+          fi
 
       - name: Build APK with Buildozer
         uses: digreatbrian/buildozer-action@v2
