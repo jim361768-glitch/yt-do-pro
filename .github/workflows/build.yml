@@ -1,16 +1,15 @@
 name: Build APK
-on:
-  push:
-    branches:
-      - main
+on: [push]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04  # Ключевое: 22.04 имеет libtinfo5, 24.04 (latest) — нет
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: digreatbrian/buildozer-action@v2
+      - name: Build APK with Buildozer
+        uses: digreatbrian/buildozer-action@v2
         with:
           buildozer-cmd: buildozer -v android debug
 
