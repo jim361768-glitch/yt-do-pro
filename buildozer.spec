@@ -11,10 +11,11 @@ orientation = portrait
 fullscreen = 0
 wakelock = 1
 android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
-android.api = 33
+android.cmdline_tools_version = 11.0
+android.api = 34
 android.minapi = 21
-android.sdk = 33
-android.ndk = 23b
+android.sdk = 34
+android.ndk = 25b
 android.ndk_api = 21
 android.arch = arm64-v8a
 icon.filename = icon.png
@@ -34,5 +35,6 @@ log_level = 2
 warn_on_root = 1
 android.accept_sdk_license = true
 android.sdkmanager_cmd = --licenses --sdk_root=%(android_sdk_dir)s
+
 
 
