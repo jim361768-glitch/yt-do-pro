@@ -24,7 +24,7 @@ jobs:
         with:
           cmdline-tools-version: latest
           accept-android-sdk-licenses: true
-          packages: platform-tools platforms;android-34 build-tools;34.0.0 ndk;27.3.13750724
+          packages: platform-tools platforms;android-34 build-tools;34.0.0 ndk;23b
 
       - name: Install Buildozer and Cython
         run: |
@@ -39,7 +39,7 @@ jobs:
         env:
           ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
           ANDROID_HOME: ${{ runner.temp }}/android-sdk
-          ANDROID_NDK_HOME: ${{ runner.temp }}/android-sdk/ndk/27.3.13750724
+          ANDROID_NDK_HOME: ${{ runner.temp }}/android-sdk/ndk/23b
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
