@@ -14,7 +14,7 @@ android.permissions = INTERNET,ACCESS_NETWORK_STATE,WRITE_EXTERNAL_STORAGE,READ_
 android.api = 34
 android.minapi = 21
 android.sdk = 34
-android.ndk = 23b
+android.ndk = 25b
 android.ndk_api = 21
 android.arch = arm64-v8a
 icon.filename = icon.png
@@ -37,6 +37,7 @@ android.skip_update = True
 log_level = 2
 warn_on_root = 1
 android.accept_sdk_license = true
+
 
 
 
