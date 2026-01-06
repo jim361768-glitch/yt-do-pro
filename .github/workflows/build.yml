@@ -19,12 +19,12 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK (без NDK)
         uses: android-actions/setup-android@v3
         with:
           cmdline-tools-version: latest
           accept-android-sdk-licenses: true
-          packages: platform-tools platforms;android-34 build-tools;34.0.0 ndk;23b
+          packages: platform-tools platforms;android-34 build-tools;34.0.0
 
       - name: Install Buildozer and Cython
         run: |
@@ -39,7 +39,6 @@ jobs:
         env:
           ANDROID_SDK_ROOT: ${{ runner.temp }}/android-sdk
           ANDROID_HOME: ${{ runner.temp }}/android-sdk
-          ANDROID_NDK_HOME: ${{ runner.temp }}/android-sdk/ndk/23b
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
